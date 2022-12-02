@@ -1,0 +1,38 @@
+* {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+canvas {
+  width: 800px;
+  height: 600px;
+  float: left;
+  display: block;
+  position: absolute;
+  left: 0;
+}
+a {
+  text-decoration: none;
+  color: #fff;
+  background: #ff97a3;
+  border-radius: 3px;
+  padding: 3px 10px;
+}
+a:hover {
+  background: #f8bcc2;
+}
+body .main {
+  text-align: center;
+}
+body .main > * {
+  width: 800px;
+  text-align: left;
+  margin: 10px auto 0 auto;
+}
+body .main .canvas-group {
+  display: inline-block;
+  width: 800px;
+  height: 600px;
+  position: relative;
+}
+/*# sourceMappingURL=snake.css.map */
