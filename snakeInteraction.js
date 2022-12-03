@@ -14,7 +14,7 @@ window.addEventListener("load", ()=>{
     //绘制墙面
     GameFunc.drawWall();
     //绘制初始菜单
-    GameFunc.drawMenu(1);
+    GameFunc.drawMenu(GameEnum.MenuEnum.MainMenu);
 });
 
 // 设定所有的交互方法
@@ -23,13 +23,9 @@ window.GameInteraction = {
     KeyDown: {
         mainMenu: (e)=>{
             if(e.code === "KeyI"){
-                if(GameVar.menuFocusIdx === 3){
-                    GameVar.menuFocusIdx=0;
-                    GameFunc.drawMenu(1);
-                }else{
-                    GameVar.menuFocusIdx++;
-                    GameFunc.drawMenu(1);
-                }
+                if(GameVar.menuFocusIdx === 3) GameVar.menuFocusIdx=0;
+                else GameVar.menuFocusIdx++;
+                GameFunc.drawMenu(1);
             }else if(e.code === "KeyO"){
                 if(GameVar.menuFocusIdx === 0){
                     GameVar.speed=150;
@@ -40,7 +36,7 @@ window.GameInteraction = {
                 }else if(GameVar.menuFocusIdx === 3){
                     GameVar.speed=25;
                 }
-                GameVar.difficult=GameVar.menuFocusIdx;
+                GameVar.difficult = GameVar.menuFocusIdx;
                 GameFunc.drawMenu(0);
                 GameFunc.drawInfo(0,5,GameVar.menuFocusIdx+1);
                 //start game
@@ -76,7 +72,11 @@ window.GameInteraction = {
                 }
             }else if(e.code === "KeyO"){//o
                 if(GameVar.menuFocusIdx === 0){
-                    setTimeout(function(){GameVar.intervalHandle=setInterval(function(){GameFunc.calcSnake();},GameVar.speed)},1000);
+                    setTimeout(()=>{
+                        GameVar.intervalHandle = setInterval(()=>{
+                            GameFunc.calcSnake();
+                        }, GameVar.speed);
+                    },1000);
                     GameVar.status=1;
                     GameFunc.drawMenu(0);
                 }else if(GameVar.menuFocusIdx === 1){

@@ -13,12 +13,20 @@ canvas {
 }
 a {
   text-decoration: none;
+  padding: 3px 10px;
+  display: inline-block;
+  height: 30px;
+  line-height: 30px;
+}
+a img {
+  vertical-align: text-top;
+}
+a.text_btn {
   color: #fff;
   background: #ff97a3;
   border-radius: 3px;
-  padding: 3px 10px;
 }
-a:hover {
+a.text_btn:hover {
   background: #f8bcc2;
 }
 body .main {
