@@ -1,10 +1,8 @@
 "use strict";
-/**
- * 本文件用于定义游戏的所有方法和变量
- */
 
 import "./snakeUtils.js"
 import "./snakeInteraction.js"
+import "./snakeConst.js"
 
 // 游戏使用的所有Canvas
 window.GameCanvas = {
@@ -17,90 +15,99 @@ window.GameCanvas = {
     menu:       document.getElementById("menu").getContext("2d"),
 };
 
-// 游戏使用的所有常量、枚举
-window.GameEnum = {
-    // 当前显示的菜单
-    MenuEnum: {
-        None: 0,
-        MainMenu: 1,
-        GamePausedMenu: 2,
-    },
-    // 当前游戏状态
-    GameStatusEnum: {
-        MainMenu: 0,        // 游戏主界面
-        Gaming: 1,          // 游戏中
-        GamePaused: 2,      // 游戏暂停中
-    },
-    // 蛇头朝向
-    SnakeDirectionEnum: {
-        None: 0,
-        Up: 1,
-        Left: 2,
-        Down: 3,
-        Right: 4
-    },
-    // 游戏模式
-    GameModeEnum: {
-        Easy: 0,
-        Normal: 1,
-        Difficuly: 2,
-        DoM: 3
-    }
-};
-window.GameConst = {
-    // 背景文字
-    GameBackgroundText: {
-        gameName: "贪吃蛇",
-        gameIntroduce: ["游戏说明", "O键 确定", "I键 选择/切换", "WASD键 控制蛇方向", "P键 暂停游戏"],
-        gameAuthorInfo: ['github: aliubo', 'liubo@aliubo.com']
-    },
-    GameInfoText: {
-        score: "分数",
-        snakeSize: "蛇长",
-    },
-    // 菜单文字
-    GameMenuText: {
-        [GameEnum.MenuEnum.None]: {},
-        [GameEnum.MenuEnum.MainMenu]: {
-            [GameEnum.GameModeEnum.Easy]: "简单难度",
-            [GameEnum.GameModeEnum.Normal]: "普通难度",
-            [GameEnum.GameModeEnum.Difficuly]: "困难难度",
-            [GameEnum.GameModeEnum.DoM]: "抖M难度",
-        },
-        [GameEnum.MenuEnum.GamePausedMenu]: {
-            0: "继续游戏",
-            1: "退出游戏"
-        }
-    }
-}
-
 // 游戏使用的全局变量
 window.GameVar = {
     // 游戏状态，合法值参考 GameConst.StatusEnum
-    status: GameEnum.GameStatusEnum.MainMenu,
+    _status: GameEnum.GameStatus.Main,
+    get status(){ return this._status; },
+    set status(val){
+        if(!(val in Object.values(GameEnum.GameStatus))) throw 'error';
+        this._status = val;
+    },
 
     // 蛇头当前朝向 合法值参考 GameConst.DirectionEnum
-    snakeCurrentAngle:  GameEnum.SnakeDirectionEnum.Right,
+    _snakeCurrentAngle:  GameEnum.SnakeDirection.Right,
+    get snakeCurrentAngle(){ return this._snakeCurrentAngle; },
+    set snakeCurrentAngle(val){
+        if(!(val in Object.values(GameEnum.SnakeDirection))) throw 'error';
+        this._snakeCurrentAngle = val;
+    },
+
     // 蛇头下一帧朝向 合法值参考 GameConst.DirectionEnum
-    snakeNextAngle:     GameEnum.SnakeDirectionEnum.None,
+    _snakeNextAngle: GameEnum.SnakeDirection.None,
+    get snakeNextAngle(){ return this._snakeNextAngle; },
+    set snakeNextAngle(val){
+        if(!(val in Object.values(GameEnum.SnakeDirection))) throw 'error';
+        this._snakeNextAngle = val;
+    },
 
-    score:0,                    //分数
-    gift:0,                     //下次分数获得的额外奖励分（随着时间会逐渐降低）
+    // 游戏模式，参考 GameEnum.GameMode
+    _gameMode: 0,
+    get gameMode(){ return this._gameMode; },
+    set gameMode(val){
+        if(!(val in Object.values(GameEnum.GameMode))) throw 'error';
+        this._gameMode = val;
+    },
 
-    snakeList:[],               //蛇链表，用于标记蛇位置信息,开始为蛇头,结尾为蛇尾
-    foodPos:[null,null],        //食物位置，[x,y]
+    // 菜单选项index位置，从0开始计数
+    _menuFocusIdx:0,
+    get menuFocusIdx(){ return this._menuFocusIdx; },
+    set menuFocusIdx(val){
+        if(!Number.isInteger(val)) throw 'error';
+        // 如果当前没有菜单项，报错
+        if(!(GameVar.status in GameText.GameMenuText)) throw 'error';
+        // 如果idx超过了菜单项的范围，报错
+        if(val < 0 || val >= Object.keys(GameText.GameMenuText[GameVar.status]).length) throw 'error';
+        this._menuFocusIdx = val;
+    },
 
-    speed:200,                  //蛇移动速度，每经过此毫秒移动一帧
 
-    intervalHandle:null,        //每帧处理setInterval句柄，用于控制游戏是否行动
+    //分数
+    _score:0,
+    get score(){ return this._score; },
+    set score(val){
+        if(!Number.isInteger(val)) throw 'error';
+        this._score = val;
+    },
 
-    difficult:0,                //参考 GameConst.GameMenuText[GameEnum.MenuEnum.MainMenu], GameEnum.MenuEnum.MainMenu = 0
+    //下次分数获得的额外奖励分（随着时间会逐渐降低）
+    _gift:0,
+    get gift(){ return this._gift; },
+    set gift(val){
+        if(!Number.isInteger(val)) throw 'error';
+        this._gift = val;
+    },
 
-    menuFocusIdx:0,
+    //蛇链表，用于标记蛇位置信息,开始为蛇头,结尾为蛇尾
+    snakeList:[],
+
+    //食物位置，[x,y]
+    foodPos:[null,null],
+
+    _speed:200,                  //蛇移动速度，每经过此毫秒移动一帧
+    get speed(){ return this._speed; },
+    set speed(val){
+        if(!Number.isInteger(val)) throw 'error';
+        this._speed = val;
+    },
+
+    _intervalHandle: 0,        //每帧处理setInterval句柄，用于控制游戏是否行动，0代表目前无循环事件
+    get intervalHandle(){ return this._intervalHandle; },
+    set intervalHandle(val){
+        if(!Number.isInteger(val)) throw 'error';
+        this._intervalHandle = val;
+    },
 };
 
 // 游戏使用的所有相关游戏方法
 window.GameFunc = {
+    // 绘制相关方法
+    changeLanguage: (lang) => {
+        window.GameText = GameTextI18n[lang];
+        GameFunc.drawBackground();
+        GameFunc.drawInfo();
+        GameFunc.drawMenu();
+    },
     drawPixel: (canvas, x, y, fillColor, borderColor) => {
         // 明确每个像素点 10*10
         let spanWidth = 1;
@@ -113,12 +120,12 @@ window.GameFunc = {
         canvas.fill();
         canvas.stroke();
     },
-    drawBackground: () => {
+    drawBackground: (bgColor = "#001323") => {
         let bg = GameCanvas.background;
-        let text = GameConst.GameBackgroundText;
+        let text = GameText.GameBackgroundText;
 
         // 黑色背景
-        bg.fillStyle="#001323";
+        bg.fillStyle = bgColor;
         bg.fillRect(0,0,800,600);
 
         // 左右分割线
@@ -144,29 +151,29 @@ window.GameFunc = {
             topIntroduce += 20;
         });
     },
-    drawWall: () => {
+    drawWall: (fillColor = "#383838", strokeColor = "#000000") => {
         let wall = GameCanvas.wall;
-        let spanWidth = 0;
-        wall.fillStyle="#383838";
-        wall.strokeStyle="#000000";
-        wall.lineWidth = spanWidth;
-
         for(let fi = 0; fi < 60; fi++){
-            GameFunc.drawPixel(wall, fi, 0, "#383838", "#000");
-            GameFunc.drawPixel(wall, fi, 59, "#383838", "#000");
-            GameFunc.drawPixel(wall, 0, fi, "#383838", "#000");
-            GameFunc.drawPixel(wall, 59, fi, "#383838", "#000");
+            GameFunc.drawPixel(wall, fi, 0, fillColor, strokeColor);
+            GameFunc.drawPixel(wall, fi, 59,fillColor, strokeColor);
+            GameFunc.drawPixel(wall, 0, fi, fillColor, strokeColor);
+            GameFunc.drawPixel(wall, 59, fi,fillColor, strokeColor);
 
         }
     },
-    drawMenu: (menuEnum) => {
-        //menuEnum =
-        let menu = GameCanvas.menu;
-        menu.strokeStyle = '#ffffff';
-        menu.fillStyle = '#ffffff';
-        menu.lineWidth = 2;
-        menu.font = '22px 微软雅黑';
-        menu.clearRect(0,0,600,600);
+    drawMenu: () => {
+        let status = GameVar.status;
+
+        let menuCanvas = GameCanvas.menu;
+        menuCanvas.clearRect(0,0,600,600);
+
+        // 如果该模式没有菜单的话，结束运行不绘制菜单
+        if(!(status in GameText.GameMenuText)) return;
+
+        menuCanvas.strokeStyle = '#ffffff';
+        menuCanvas.fillStyle = '#ffffff';
+        menuCanvas.lineWidth = 2;
+        menuCanvas.font = '22px 微软雅黑';
 
         // 给出一个[str...]列表用于绘制
         let startdraw = (li) => {
@@ -176,8 +183,8 @@ window.GameFunc = {
             let height = 46;
             let span = 70;
             li.forEach((e) => {
-                menu.strokeRect(leftRect, topRect, width, height);
-                menu.fillText(e, leftText, topText);
+                menuCanvas.strokeRect(leftRect, topRect, width, height);
+                menuCanvas.fillText(e, leftText, topText);
                 topRect += span;
                 topText += span;
             });
@@ -186,11 +193,11 @@ window.GameFunc = {
         // 生成一段菜单列表并交由startdraw绘制
         let menuItems = (()=>{
             // 获取菜单的按钮数目
-            let nums = Object.keys(GameConst.GameMenuText[menuEnum]).length;
+            let nums = Object.keys(GameText.GameMenuText[status]).length;
             // 开始逐一获取菜单文字
             let list = []
             for(let i = 0; i < nums; i++){
-                list.push(GameConst.GameMenuText[menuEnum][i]);
+                list.push(GameText.GameMenuText[status][i]);
             }
             return list;
         })();
@@ -199,33 +206,31 @@ window.GameFunc = {
         startdraw(menuItems);
 
         // 画激活的部分
-        if(menuEnum !== GameEnum.MenuEnum.None){
-            menu.strokeStyle='#ff6666';
-            menu.lineWidth=5;
-            menu.strokeRect(229,229 + ( GameVar.menuFocusIdx * 70),146,46);
-        }
+        menuCanvas.strokeStyle='#ff6666';
+        menuCanvas.lineWidth=5;
+        menuCanvas.strokeRect(229,229 + ( GameVar.menuFocusIdx * 70),146,46);
     },
     drawInfo: () => {
-        if(GameVar.status === GameEnum.GameStatusEnum.Gaming){
+        if(GameVar.status === GameEnum.GameStatus.Gaming){
             let info = GameCanvas.info;
             info.clearRect(600,0,200,600);
             info.font='22px 微软雅黑';
             info.fillStyle='#ffffff';
-            info.fillText(GameConst.GameMenuText[GameEnum.MenuEnum.MainMenu][GameVar.difficult],630,140);
-            info.fillText(GameConst.GameInfoText.score + ': ' + GameVar.score,630,175);
-            info.fillText(GameConst.GameInfoText.snakeSize + ': ' + GameVar.snakeList.length,630,210);
+            info.fillText(GameText.GameMenuText[GameEnum.GameStatus.Main][GameVar.gameMode],630,140);
+            info.fillText(GameText.GameInfoText.score + ': ' + GameVar.score,630,175);
+            info.fillText(GameText.GameInfoText.snakeSize + ': ' + GameVar.snakeList.length,630,210);
         }
     },
     drawSnake: () => {
         let snake = GameCanvas.snake;
-        snake.clearRect(0,0,600,600);
+        snake.clearRect(0,0,700,600);
         // 绘制蛇身
         let snakelist = GameVar.snakeList;
         snakelist.forEach(pix => {
-            GameFunc.drawPixel(snake, pix[0], pix[1], "#F08080", "#F08080");
+            GameFunc.drawPixel(snake, pix.x, pix.y, "#F08080", "#F08080");
         });
         // 绘制蛇头
-        GameFunc.drawPixel(snake, snakelist[0][0], snakelist[0][1], "#F0E68C", "#F0E68C");
+        GameFunc.drawPixel(snake, snakelist[0].x, snakelist[0].y, "#F0E68C", "#F0E68C");
     },
     drawFood: () => {
         let foodCanvas = GameCanvas.food;
@@ -233,117 +238,477 @@ window.GameFunc = {
 
         // 生成一个不在蛇身的一个食物坐标
         do{
-            GameVar.food=[Utils.randomInteger(1,58), Utils.randomInteger(1,58)];
-        }while(GameVar.snakeList.some(x => {
-            return x[0] === GameVar.food[0] && x[1] === GameVar.food[1];
-        }));
+            let x = GameUtils.randomInteger(1,58);
+            let y = GameUtils.randomInteger(1,58);
+            GameVar.food = new GameClass.Point(x, y);
+        }while(GameVar.snakeList.some(x => x.equal(GameVar.food)));
 
-        GameFunc.drawPixel(foodCanvas, GameVar.food[0], GameVar.food[1], "#ff3333", "#ff3333");
+        GameFunc.drawPixel(foodCanvas, GameVar.food.x, GameVar.food.y, "#ff3333", "#ff3333");
     },
-    calcEatFood:() => {
-        if(GameVar.snakeList[0][0] === GameVar.food[0] && GameVar.snakeList[0][1] === GameVar.food[1]){
-            //吃到食物，保留蛇尾，刷新食物，加分数
-            let bonus;
-            bonus = Math.floor((GameVar.gift>=0?GameVar.gift:0)+(10000/GameVar.speed) );
-            GameVar.score += bonus;
-
-            // 如果是DoM模式的话蛇尾+30长度
-            if(GameVar.difficult === GameEnum.GameModeEnum.DoM){
-                for(let i = 0; i < 29; i++)
-                    GameVar.snakeList.push(GameVar.snakeList[GameVar.snakeList.length - 1]);
-            }
-
-            GameFunc.drawInfo();
-            GameFunc.drawFood();
-            GameVar.gift = (GameVar.menuFocusIdx * 2 + 1) * (
-                Math.abs(GameVar.food[0]-GameVar.snakeList[0][0]) +
-                Math.abs(GameVar.food[1]-GameVar.snakeList[0][1])
-            );
-        }else{
-            //没吃到食物，去掉蛇尾
-            GameVar.snakeList.pop();
-        }
+    // 游戏初始化，为下面的几个方法合理的赋值，并且开始游戏
+    gameInit: () => {
+        GameFunc.gameModeFunc = GameMode[GameVar.gameMode];
+        GameFunc.gameModeFunc.gameStart();
     },
-    calcHitFatal: () => {
-        GameVar.snakeList.forEach((e)=>{
-            if(
-                // 撞墙
-                (   e[0] < 1 || e[0] > 58 ||
-                    e[1] < 1 || e[1] > 58
-                ) ||
-                // 撞蛇
-                (
-                    e !== GameVar.snakeList[0] &&
-                    GameVar.snakeList[0][0] === e[0] &&
-                    GameVar.snakeList[0][1] === e[1]
-                )
-            ){
-                //撞墙/蛇
-                clearInterval(GameVar.intervalHandle);
-                GameFunc.gameEnd();
-            }
-        });
+    gameModeFunc: {
+        calcEatFood: null,
+        calcHitFatal: null,
+        calcSnake: null,
+        gameStart: null,
+        gamePaused: null,
+        gameContinue: null,
+        gameEnd: null,
     },
-    calcSnake: () => {
-        //计算蛇下一次走向
-        let direction;
-        if(GameVar.snakeNextAngle){
-            direction = GameVar.snakeNextAngle
-        }else{
-            direction = GameVar.snakeCurrentAngle
-        }
-
-        if(direction === 1){
-            GameVar.snakeCurrentAngle=1;
-            GameVar.snakeList.unshift([GameVar.snakeList[0][0],GameVar.snakeList[0][1]-1]);
-        }else if(direction === 2){
-            GameVar.snakeCurrentAngle=2;
-            GameVar.snakeList.unshift([GameVar.snakeList[0][0]-1,GameVar.snakeList[0][1]]);
-        }else if(direction === 3){
-            GameVar.snakeCurrentAngle=3;
-            GameVar.snakeList.unshift([GameVar.snakeList[0][0],GameVar.snakeList[0][1]+1]);
-        }else if(direction === 4){
-            GameVar.snakeCurrentAngle=4;
-            GameVar.snakeList.unshift([GameVar.snakeList[0][0]+1,GameVar.snakeList[0][1]]);
-        }
-        //计算蛇吃到了食物
-        GameVar.gift--;
-        GameFunc.calcEatFood();
-        //计算蛇不撞蛇、墙
-        GameFunc.calcHitFatal();
-        /*先计算食物，在计算障碍物，以免蛇头撞蛇尾出现误判*/
-        GameFunc.drawSnake();
-        //if(GameVar.snakeNextAngle !== direction) GameVar.snakeNextAngle = direction;
-        //else GameVar.snakeNextAngle=0;
-        GameVar.snakeNextAngle=0;
-    },
-    gameStart: () => {
-        GameVar.status=1;
-        //创建蛇链表
-        GameVar.snakeList=[[20,29],[19,29],[18,29],[17,29],[16,29]];
-        GameVar.snakeCurrentAngle=4;
-        GameFunc.drawInfo();
-        GameFunc.drawSnake();
-        GameFunc.drawFood();
-        setTimeout(()=>{
-            GameVar.intervalHandle = setInterval(()=>{
-                GameFunc.calcSnake();
-            },GameVar.speed)
-        },1000);
-    },
-    gameEnd: () => {
-        GameVar.status=0;
-        GameVar.menuFocusIdx=0;
-        GameVar.snakeNextAngle=0;
-        GameVar.anakedefaultangle=4;
-        GameVar.difficult=0;
-        GameVar.score=0;
-        GameVar.gift=0;
-        GameVar.snakeList=[];
-        GameVar.foodPos=[null,null];
-        GameFunc.drawMenu(1);
-    }
 };
 
+window.GameMode = {
+    [GameEnum.GameMode.Easy]: {
+        calcEatFood:() => {
+            if(GameVar.snakeList[0].equal(GameVar.food)){
+                //吃到食物，保留蛇尾，刷新食物，加分数
+                let bonus;
+                bonus = Math.floor((GameVar.gift>=0?GameVar.gift:0)+(10000/GameVar.speed));
+                GameVar.score += bonus;
+                GameFunc.drawInfo();
+                GameFunc.drawFood();
+                GameVar.gift = (GameVar.menuFocusIdx * 2 + 1) * (
+                    Math.abs(GameVar.food.x - GameVar.snakeList[0].x) +
+                    Math.abs(GameVar.food.y - GameVar.snakeList[0].y)
+                );
+            }else{
+                //没吃到食物，去掉蛇尾
+                GameVar.snakeList.pop();
+            }
+        },
+        calcHitFatal: () => {
+            let isFatal = GameVar.snakeList.some(e =>
+                e !== GameVar.snakeList[0] && GameVar.snakeList[0].equal(e) // 撞蛇
+            );
+            if(isFatal){
+                GameFunc.gameModeFunc.gameEnd();
+            }
+        },
+        calcSnake: () => {
+            //计算蛇下一次走向
+            let direction;
+            if(GameVar.snakeNextAngle) direction = GameVar.snakeNextAngle
+            else direction = GameVar.snakeCurrentAngle;
+
+            let snakelist = GameVar.snakeList;
+            let Point = GameClass.Point;
+
+            let x = snakelist[0].x, y = snakelist[0].y
+            if(direction === 1){ GameVar.snakeCurrentAngle=1; y--; }
+            else if(direction === 2){ GameVar.snakeCurrentAngle=2; x--; }
+            else if(direction === 3){ GameVar.snakeCurrentAngle=3; y++; }
+            else if(direction === 4){ GameVar.snakeCurrentAngle=4; x++; }
+
+            //允许撞墙
+            if(x === 0) x = 58;
+            if(x === 59) x = 1;
+            if(y === 0) y = 58;
+            if(y === 59) y = 1;
+
+            snakelist.unshift(new Point(x, y));
+
+            //计算蛇吃到了食物
+            GameVar.gift--;
+            GameFunc.gameModeFunc.calcEatFood();
+
+            GameFunc.drawSnake();
+            //计算蛇不撞蛇、墙
+            GameFunc.gameModeFunc.calcHitFatal();
+
+            GameVar.snakeNextAngle = GameEnum.SnakeDirection.None;
+        },
+        gameStart: () => {
+            GameVar.status = GameEnum.GameStatus.Gaming;
+            GameFunc.drawMenu();
+            GameFunc.drawInfo();
+            GameVar.speed = 50;
+            //创建蛇链表
+            var Point = GameClass.Point;
+            GameVar.snakeList=[
+                new Point(20,29), new Point(19,29), new Point(18,29),
+                new Point(17,29), new Point(16,29)
+            ];
+            GameVar.snakeCurrentAngle = GameEnum.SnakeDirection.Right;
+            GameFunc.drawInfo();
+            GameFunc.drawSnake();
+            GameFunc.drawFood();
+            GameFunc.gameModeFunc.gameContinue();
+        },
+        gamePaused: () => {
+            if(GameVar.status === GameEnum.GameStatus.Gaming){
+                if(GameVar.intervalHandle !== 0) {
+                    clearInterval(GameVar.intervalHandle);
+                    GameVar.intervalHandle = 0;
+                }
+                GameVar.status = GameEnum.GameStatus.GamePaused;
+                GameVar.menuFocusIdx = 0;
+                GameFunc.drawMenu();
+            }
+        },
+        gameContinue: () => {
+            GameVar.status = GameEnum.GameStatus.Gaming;
+            setTimeout(()=>{
+                if(GameVar.status !== GameEnum.GameStatus.Gaming) return;
+                if(GameVar.intervalHandle !== 0) return;
+                GameVar.intervalHandle = setInterval(()=>{
+                    GameFunc.gameModeFunc.calcSnake();
+                }, GameVar.speed);
+            },1000);
+            GameFunc.drawMenu();
+        },
+        gameEnd: () => {
+            clearInterval(GameVar.intervalHandle);
+            GameVar.intervalHandle = 0;
+            GameVar.status = GameEnum.GameStatus.Main;
+            GameVar.menuFocusIdx = 0;
+            GameVar.snakeNextAngle = GameEnum.SnakeDirection.None;
+            GameVar.anakedefaultangle = GameEnum.SnakeDirection.Right;
+            //GameVar.gameMode = 0;
+            GameVar.score = 0;
+            GameVar.gift = 0;
+            GameVar.snakeList = [];
+            GameVar.foodPos = null;
+            GameFunc.drawMenu(1);
+        },
+    },
+    [GameEnum.GameMode.Normal]: {
+        calcEatFood:() => {
+            if(GameVar.snakeList[0].equal(GameVar.food)){
+                //吃到食物，保留蛇尾，刷新食物，加分数
+                let bonus;
+                bonus = Math.floor((GameVar.gift>=0?GameVar.gift:0)+(10000/GameVar.speed) );
+                GameVar.score += bonus;
+                GameFunc.drawInfo();
+                GameFunc.drawFood();
+                GameVar.gift = (GameVar.menuFocusIdx * 2 + 1) * (
+                    Math.abs(GameVar.food.x - GameVar.snakeList[0].x) +
+                    Math.abs(GameVar.food.y - GameVar.snakeList[0].y)
+                );
+            }else{
+                //没吃到食物，去掉蛇尾
+                GameVar.snakeList.pop();
+            }
+        },
+        calcHitFatal: () => {
+            let isFatal = GameVar.snakeList.some(e => (
+                ( e.x < 1 || e.x > 58 || e.y < 1 || e.y > 58 ) || // 撞墙
+                ( e !== GameVar.snakeList[0] && GameVar.snakeList[0].equal(e) ) // 撞蛇
+            ));
+            if(isFatal){
+                GameFunc.gameModeFunc.gameEnd();
+            }
+        },
+        calcSnake: () => {
+            //计算蛇下一次走向
+            let direction;
+            if(GameVar.snakeNextAngle) direction = GameVar.snakeNextAngle
+            else direction = GameVar.snakeCurrentAngle;
+
+            let snakelist = GameVar.snakeList;
+            let Point = GameClass.Point;
+
+            let x = snakelist[0].x, y = snakelist[0].y
+            if(direction === 1){ GameVar.snakeCurrentAngle=1; y--; }
+            else if(direction === 2){ GameVar.snakeCurrentAngle=2; x--; }
+            else if(direction === 3){ GameVar.snakeCurrentAngle=3; y++; }
+            else if(direction === 4){ GameVar.snakeCurrentAngle=4; x++; }
+
+            snakelist.unshift(new Point(x, y));
+
+            //计算蛇吃到了食物
+            GameVar.gift--;
+            GameFunc.gameModeFunc.calcEatFood();
+
+            GameFunc.drawSnake();
+            //计算蛇不撞蛇、墙
+            GameFunc.gameModeFunc.calcHitFatal();
+
+            GameVar.snakeNextAngle = GameEnum.SnakeDirection.None;
+        },
+        gameStart: () => {
+            GameVar.status = GameEnum.GameStatus.Gaming;
+            GameFunc.drawMenu();
+            GameFunc.drawInfo();
+            GameVar.speed = 50;
+            //创建蛇链表
+            var Point = GameClass.Point;
+            GameVar.snakeList=[
+                new Point(20,29), new Point(19,29), new Point(18,29),
+                new Point(17,29), new Point(16,29)
+            ];
+            GameVar.snakeCurrentAngle = GameEnum.SnakeDirection.Right;
+            GameFunc.drawInfo();
+            GameFunc.drawSnake();
+            GameFunc.drawFood();
+            GameFunc.gameModeFunc.gameContinue();
+        },
+        gamePaused: () => {
+            if(GameVar.status === GameEnum.GameStatus.Gaming){
+                if(GameVar.intervalHandle !== 0) {
+                    clearInterval(GameVar.intervalHandle);
+                    GameVar.intervalHandle = 0;
+                }
+                GameVar.status = GameEnum.GameStatus.GamePaused;
+                GameVar.menuFocusIdx = 0;
+                GameFunc.drawMenu();
+            }
+        },
+        gameContinue: () => {
+            GameVar.status = GameEnum.GameStatus.Gaming;
+            setTimeout(()=>{
+                if(GameVar.status !== GameEnum.GameStatus.Gaming) return;
+                if(GameVar.intervalHandle !== 0) return;
+                GameVar.intervalHandle = setInterval(()=>{
+                    GameFunc.gameModeFunc.calcSnake();
+                }, GameVar.speed);
+            },1000);
+            GameFunc.drawMenu();
+        },
+        gameEnd: () => {
+            clearInterval(GameVar.intervalHandle);
+            GameVar.intervalHandle = 0;
+            GameVar.status = GameEnum.GameStatus.Main;
+            GameVar.menuFocusIdx = 0;
+            GameVar.snakeNextAngle = GameEnum.SnakeDirection.None;
+            GameVar.anakedefaultangle = GameEnum.SnakeDirection.Right;
+            //GameVar.gameMode = 0;
+            GameVar.score = 0;
+            GameVar.gift = 0;
+            GameVar.snakeList = [];
+            GameVar.foodPos = null;
+            GameFunc.drawMenu(1);
+        },
+    },
+    [GameEnum.GameMode.Hard]: {
+        calcEatFood:() => {
+            if(GameVar.snakeList[0].equal(GameVar.food)){
+                //吃到食物，保留蛇尾，刷新食物，加分数
+                let bonus;
+                bonus = Math.floor((GameVar.gift>=0?GameVar.gift:0)+(10000/GameVar.speed) );
+                GameVar.score += bonus;
+
+                // 蛇尾+30长度
+                for(let i = 0; i < 29; i++)
+                    GameVar.snakeList.push(GameVar.snakeList[GameVar.snakeList.length - 1].clone());
 
 
+                GameFunc.drawInfo();
+                GameFunc.drawFood();
+                GameVar.gift = (GameVar.menuFocusIdx * 2 + 1) * (
+                    Math.abs(GameVar.food.x - GameVar.snakeList[0].x) +
+                    Math.abs(GameVar.food.y - GameVar.snakeList[0].y)
+                );
+            }else{
+                //没吃到食物，去掉蛇尾
+                GameVar.snakeList.pop();
+            }
+        },
+        calcHitFatal: () => {
+            let isFatal = GameVar.snakeList.some(e => (
+                ( e.x < 1 || e.x > 58 || e.y < 1 || e.y > 58 ) || // 撞墙
+                ( e !== GameVar.snakeList[0] && GameVar.snakeList[0].equal(e) ) // 撞蛇
+            ));
+            if(isFatal){
+                GameFunc.gameModeFunc.gameEnd();
+            }
+        },
+        calcSnake: () => {
+            //计算蛇下一次走向
+            let direction;
+            if(GameVar.snakeNextAngle) direction = GameVar.snakeNextAngle
+            else direction = GameVar.snakeCurrentAngle;
+
+            let snakelist = GameVar.snakeList;
+            let Point = GameClass.Point;
+
+            let x = snakelist[0].x, y = snakelist[0].y
+            if(direction === 1){ GameVar.snakeCurrentAngle=1; y--; }
+            else if(direction === 2){ GameVar.snakeCurrentAngle=2; x--; }
+            else if(direction === 3){ GameVar.snakeCurrentAngle=3; y++; }
+            else if(direction === 4){ GameVar.snakeCurrentAngle=4; x++; }
+
+            snakelist.unshift(new Point(x, y));
+
+            //计算蛇吃到了食物
+            GameVar.gift--;
+            GameFunc.gameModeFunc.calcEatFood();
+
+            GameFunc.drawSnake();
+            //计算蛇不撞蛇、墙
+            GameFunc.gameModeFunc.calcHitFatal();
+
+            GameVar.snakeNextAngle = GameEnum.SnakeDirection.None;
+        },
+        gameStart: () => {
+            GameVar.status = GameEnum.GameStatus.Gaming;
+            GameFunc.drawMenu();
+            GameFunc.drawInfo();
+            GameVar.speed = 50;
+            //创建蛇链表
+            var Point = GameClass.Point;
+            GameVar.snakeList=[
+                new Point(20,29), new Point(19,29), new Point(18,29),
+                new Point(17,29), new Point(16,29)
+            ];
+            GameVar.snakeCurrentAngle = GameEnum.SnakeDirection.Right;
+            GameFunc.drawInfo();
+            GameFunc.drawSnake();
+            GameFunc.drawFood();
+            GameFunc.gameModeFunc.gameContinue();
+        },
+        gamePaused: () => {
+            if(GameVar.status === GameEnum.GameStatus.Gaming){
+                if(GameVar.intervalHandle !== 0) {
+                    clearInterval(GameVar.intervalHandle);
+                    GameVar.intervalHandle = 0;
+                }
+                GameVar.status = GameEnum.GameStatus.GamePaused;
+                GameVar.menuFocusIdx = 0;
+                GameFunc.drawMenu();
+            }
+        },
+        gameContinue: () => {
+            GameVar.status = GameEnum.GameStatus.Gaming;
+            setTimeout(()=>{
+                if(GameVar.status !== GameEnum.GameStatus.Gaming) return;
+                if(GameVar.intervalHandle !== 0) return;
+                GameVar.intervalHandle = setInterval(()=>{
+                    GameFunc.gameModeFunc.calcSnake();
+                }, GameVar.speed);
+            },1000);
+            GameFunc.drawMenu();
+        },
+        gameEnd: () => {
+            clearInterval(GameVar.intervalHandle);
+            GameVar.intervalHandle = 0;
+            GameVar.status = GameEnum.GameStatus.Main;
+            GameVar.menuFocusIdx = 0;
+            GameVar.snakeNextAngle = GameEnum.SnakeDirection.None;
+            GameVar.anakedefaultangle = GameEnum.SnakeDirection.Right;
+            //GameVar.gameMode = 0;
+            GameVar.score = 0;
+            GameVar.gift = 0;
+            GameVar.snakeList = [];
+            GameVar.foodPos = null;
+            GameFunc.drawMenu(1);
+        },
+    },
+    [GameEnum.GameMode.DoM]: {
+        calcEatFood:() => {
+            if(GameVar.snakeList[0].equal(GameVar.food)){
+                //吃到食物，保留蛇尾，刷新食物，加分数
+                let bonus;
+                bonus = Math.floor((GameVar.gift>=0?GameVar.gift:0)+(10000/GameVar.speed) );
+                GameVar.score += bonus;
+
+                // 蛇尾+30长度
+                for(let i = 0; i < 29; i++)
+                    GameVar.snakeList.push(GameVar.snakeList[GameVar.snakeList.length - 1].clone());
+
+
+                GameFunc.drawInfo();
+                GameFunc.drawFood();
+                GameVar.gift = (GameVar.menuFocusIdx * 2 + 1) * (
+                    Math.abs(GameVar.food.x - GameVar.snakeList[0].x) +
+                    Math.abs(GameVar.food.y - GameVar.snakeList[0].y)
+                );
+            }else{
+                //没吃到食物，去掉蛇尾
+                GameVar.snakeList.pop();
+            }
+        },
+        calcHitFatal: () => {
+            let isFatal = GameVar.snakeList.some(e => (
+                ( e.x < 1 || e.x > 58 || e.y < 1 || e.y > 58 ) || // 撞墙
+                ( e !== GameVar.snakeList[0] && GameVar.snakeList[0].equal(e) ) // 撞蛇
+            ));
+            if(isFatal){
+                GameFunc.gameModeFunc.gameEnd();
+            }
+        },
+        calcSnake: () => {
+            //计算蛇下一次走向
+            let direction;
+            if(GameVar.snakeNextAngle) direction = GameVar.snakeNextAngle
+            else direction = GameVar.snakeCurrentAngle;
+
+            let snakelist = GameVar.snakeList;
+            let Point = GameClass.Point;
+
+            let x = snakelist[0].x, y = snakelist[0].y
+            if(direction === 1){ GameVar.snakeCurrentAngle=1; y--; }
+            else if(direction === 2){ GameVar.snakeCurrentAngle=2; x--; }
+            else if(direction === 3){ GameVar.snakeCurrentAngle=3; y++; }
+            else if(direction === 4){ GameVar.snakeCurrentAngle=4; x++; }
+
+            snakelist.unshift(new Point(x, y));
+
+            //计算蛇吃到了食物
+            GameVar.gift--;
+            GameFunc.gameModeFunc.calcEatFood();
+
+            GameFunc.drawSnake();
+            //计算蛇不撞蛇、墙
+            GameFunc.gameModeFunc.calcHitFatal();
+
+            GameVar.snakeNextAngle = GameEnum.SnakeDirection.None;
+        },
+        gameStart: () => {
+            GameVar.status = GameEnum.GameStatus.Gaming;
+            GameFunc.drawMenu();
+            GameFunc.drawInfo();
+            GameVar.speed = 25;
+            //创建蛇链表
+            var Point = GameClass.Point;
+            GameVar.snakeList=[
+                new Point(20,29), new Point(19,29), new Point(18,29),
+                new Point(17,29), new Point(16,29)
+            ];
+            GameVar.snakeCurrentAngle = GameEnum.SnakeDirection.Right;
+            GameFunc.drawInfo();
+            GameFunc.drawSnake();
+            GameFunc.drawFood();
+            GameFunc.gameModeFunc.gameContinue();
+        },
+        gamePaused: () => {
+            if(GameVar.status === GameEnum.GameStatus.Gaming){
+                if(GameVar.intervalHandle !== 0) {
+                    clearInterval(GameVar.intervalHandle);
+                    GameVar.intervalHandle = 0;
+                }
+                GameVar.status = GameEnum.GameStatus.GamePaused;
+                GameVar.menuFocusIdx = 0;
+                GameFunc.drawMenu();
+            }
+        },
+        gameContinue: () => {
+            GameVar.status = GameEnum.GameStatus.Gaming;
+            setTimeout(()=>{
+                if(GameVar.status !== GameEnum.GameStatus.Gaming) return;
+                if(GameVar.intervalHandle !== 0) return;
+                GameVar.intervalHandle = setInterval(()=>{
+                    GameFunc.gameModeFunc.calcSnake();
+                }, GameVar.speed);
+            },1000);
+            GameFunc.drawMenu();
+        },
+        gameEnd: () => {
+            clearInterval(GameVar.intervalHandle);
+            GameVar.intervalHandle = 0;
+            GameVar.status = GameEnum.GameStatus.Main;
+            GameVar.menuFocusIdx = 0;
+            GameVar.snakeNextAngle = GameEnum.SnakeDirection.None;
+            GameVar.anakedefaultangle = GameEnum.SnakeDirection.Right;
+            //GameVar.gameMode = 0;
+            GameVar.score = 0;
+            GameVar.gift = 0;
+            GameVar.snakeList = [];
+            GameVar.foodPos = null;
+            GameFunc.drawMenu(1);
+        },
+    },
+}

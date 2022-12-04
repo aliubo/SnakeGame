@@ -9,12 +9,19 @@
 	<body>
 		<div class="main">
 			<p>
-				<a class="text_btn" href="https://aliubo.com">回到首页</a>
+				<a id="backToHome" class="text_btn" href="https://aliubo.com">回到首页</a>
 				<a class="text_btn" href="https://github.com/aliubo/SnakeGame">
 					<img width="20" height="20" src="https://aliubo.com/nav/img/github.svg" alt="">
 					aliubo/SnakeGame
 				</a>
-				暂仅支持键盘操作，'O'确定，'I'选择，'WASD'控制移动, 'P'游戏中暂停
+				Language: <select id="language-selector">
+					<option value="zh">中文</option>
+					<option value="en" selected>English</option>
+				</select>
+			</p>
+			<hr>
+			<p id="hint">
+
 			</p>
 			<div class="canvas-group">
 				<canvas id="background" width="800" height="600"></canvas>
@@ -28,5 +35,33 @@
 		</div>
 
 		<script type="module" src="snakeGame.js"></script>
+		<script>
+			let $ = e => document.querySelector(e);
+			window.WebPageText = {
+				backToHome: {
+					zh: "回到首页",
+					en: "Home"
+				},
+				hint: {
+					zh: "暂仅支持键盘操作，'O'确定，'I'选择，'WASD'控制移动, 'P'游戏中暂停",
+					en: "Currently only supports keyboard operation, 'O' to confirm, 'I' to select, 'WASD' to control movement, 'P' to pause the game",
+				},
+			}
+			let lang = $("#language-selector");
+			lang.addEventListener("change", e=>{
+				console.log(e.target);
+				let val = e.target.value;
+				GameFunc.changeLanguage(val);
+				$('#hint').innerText = WebPageText.hint[val];
+				$('#backToHome').innerText = WebPageText.backToHome[val];
+			});
+			lang.childNodes.forEach(e=>{
+				e.selected = e.value === navigator.language.slice(0, 2);
+				if(e.selected){
+					$('#hint').innerText = WebPageText.hint[e.value];
+					$('#backToHome').innerText = WebPageText.backToHome[e.value];
+				}
+			});
+		</script>
 	</body>
 </html>

@@ -29,6 +29,15 @@ a.text_btn {
 a.text_btn:hover {
   background: #f8bcc2;
 }
+hr {
+  height: 1px;
+  background: darkblue;
+  margin: 5px;
+}
+select {
+  border: 1px solid #333;
+  border-radius: 5px;
+}
 body .main {
   text-align: center;
 }
