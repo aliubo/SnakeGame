@@ -15,6 +15,13 @@ window.GameCanvas = {
     menu:       document.getElementById("menu").getContext("2d"),
 };
 
+// 游戏使用的音效库，应由GameFunc.playSound间接调用而不应该直接访问此成员调用
+window.GameSound = {
+    eatFood: new Audio("./res/eatfood.mp3"),
+    gameOver: new Audio("./res/gameover.mp3"),
+    switchOption: new Audio("./res/switchOption.mp3"),
+}
+
 // 游戏使用的全局变量
 window.GameVar = {
     // 游戏状态，合法值参考 GameConst.StatusEnum
@@ -84,18 +91,28 @@ window.GameVar = {
     //食物位置，[x,y]
     foodPos:[null,null],
 
-    _speed:200,                  //蛇移动速度，每经过此毫秒移动一帧
+    //蛇移动速度，每经过此毫秒移动一帧
+    _speed:200,
     get speed(){ return this._speed; },
     set speed(val){
         if(!Number.isInteger(val)) throw 'error';
         this._speed = val;
     },
 
-    _intervalHandle: 0,        //每帧处理setInterval句柄，用于控制游戏是否行动，0代表目前无循环事件
+    //每帧处理setInterval句柄，用于控制游戏是否行动，0代表目前无循环事件
+    _intervalHandle: 0,
     get intervalHandle(){ return this._intervalHandle; },
     set intervalHandle(val){
         if(!Number.isInteger(val)) throw 'error';
         this._intervalHandle = val;
+    },
+
+    // 是否播放音效，bool类型
+    _isMute: false,
+    get isMute(){ return this._isMute; },
+    set isMute(val){
+        if(val !== true && val !== false) throw 'error';
+        this._isMute = val;
     },
 };
 
@@ -107,6 +124,15 @@ window.GameFunc = {
         GameFunc.drawBackground();
         GameFunc.drawInfo();
         GameFunc.drawMenu();
+    },
+    switchMute: (isOpen=true) => {
+        GameVar.isMute = isOpen;
+    },
+    playSound: (name) => {
+        if(GameVar.isMute) return;
+        let sound = GameSound[name];
+        sound.currentTime = 0
+        sound.play();
     },
     drawPixel: (canvas, x, y, fillColor, borderColor) => {
         // 明确每个像素点 10*10
@@ -275,6 +301,7 @@ window.GameMode = {
                     Math.abs(GameVar.food.x - GameVar.snakeList[0].x) +
                     Math.abs(GameVar.food.y - GameVar.snakeList[0].y)
                 );
+                GameFunc.playSound('eatFood');
             }else{
                 //没吃到食物，去掉蛇尾
                 GameVar.snakeList.pop();
@@ -286,6 +313,7 @@ window.GameMode = {
             );
             if(isFatal){
                 GameFunc.gameModeFunc.gameEnd();
+                GameFunc.playSound('gameOver');
             }
         },
         calcSnake: () => {
@@ -388,6 +416,7 @@ window.GameMode = {
                     Math.abs(GameVar.food.x - GameVar.snakeList[0].x) +
                     Math.abs(GameVar.food.y - GameVar.snakeList[0].y)
                 );
+                GameFunc.playSound('eatFood');
             }else{
                 //没吃到食物，去掉蛇尾
                 GameVar.snakeList.pop();
@@ -400,6 +429,7 @@ window.GameMode = {
             ));
             if(isFatal){
                 GameFunc.gameModeFunc.gameEnd();
+                GameFunc.playSound('gameOver');
             }
         },
         calcSnake: () => {
@@ -495,13 +525,14 @@ window.GameMode = {
                 for(let i = 0; i < 29; i++)
                     GameVar.snakeList.push(GameVar.snakeList[GameVar.snakeList.length - 1].clone());
 
-
                 GameFunc.drawInfo();
                 GameFunc.drawFood();
                 GameVar.gift = (GameVar.menuFocusIdx * 2 + 1) * (
                     Math.abs(GameVar.food.x - GameVar.snakeList[0].x) +
                     Math.abs(GameVar.food.y - GameVar.snakeList[0].y)
                 );
+
+                GameFunc.playSound('eatFood');
             }else{
                 //没吃到食物，去掉蛇尾
                 GameVar.snakeList.pop();
@@ -514,6 +545,7 @@ window.GameMode = {
             ));
             if(isFatal){
                 GameFunc.gameModeFunc.gameEnd();
+                GameFunc.playSound('gameOver');
             }
         },
         calcSnake: () => {
@@ -609,13 +641,14 @@ window.GameMode = {
                 for(let i = 0; i < 29; i++)
                     GameVar.snakeList.push(GameVar.snakeList[GameVar.snakeList.length - 1].clone());
 
-
                 GameFunc.drawInfo();
                 GameFunc.drawFood();
                 GameVar.gift = (GameVar.menuFocusIdx * 2 + 1) * (
                     Math.abs(GameVar.food.x - GameVar.snakeList[0].x) +
                     Math.abs(GameVar.food.y - GameVar.snakeList[0].y)
                 );
+
+                GameFunc.playSound('eatFood');
             }else{
                 //没吃到食物，去掉蛇尾
                 GameVar.snakeList.pop();
@@ -628,6 +661,7 @@ window.GameMode = {
             ));
             if(isFatal){
                 GameFunc.gameModeFunc.gameEnd();
+                GameFunc.playSound('gameOver');
             }
         },
         calcSnake: () => {

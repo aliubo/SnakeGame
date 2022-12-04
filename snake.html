@@ -14,9 +14,15 @@
 					<img width="20" height="20" src="https://aliubo.com/nav/img/github.svg" alt="">
 					aliubo/SnakeGame
 				</a>
-				Language: <select id="language-selector">
+				Language/语言:
+				<select id="language-selector">
 					<option value="zh">中文</option>
 					<option value="en" selected>English</option>
+				</select>
+				Mute/静音:
+				<select id="mute-selector">
+					<option value="false" selected>No</option>
+					<option value="true">Yes</option>
 				</select>
 			</p>
 			<hr>
@@ -49,7 +55,6 @@
 			}
 			let lang = $("#language-selector");
 			lang.addEventListener("change", e=>{
-				console.log(e.target);
 				let val = e.target.value;
 				GameFunc.changeLanguage(val);
 				$('#hint').innerText = WebPageText.hint[val];
@@ -62,6 +67,11 @@
 					$('#backToHome').innerText = WebPageText.backToHome[e.value];
 				}
 			});
+			let mute = $('#mute-selector');
+			mute.addEventListener("change", e=>{
+				let val = e.target.value === 'true';
+				GameFunc.switchMute(val);
+			})
 		</script>
 	</body>
 </html>

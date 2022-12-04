@@ -26,9 +26,11 @@ window.GameInteraction = {
                 if(GameVar.menuFocusIdx === 3) GameVar.menuFocusIdx=0;
                 else GameVar.menuFocusIdx++;
                 GameFunc.drawMenu(GameEnum.GameStatus.Main);
+                GameFunc.playSound('switchOption');
             }else if(e.code === "KeyO"){
                 GameVar.gameMode = GameVar.menuFocusIdx;
                 GameFunc.gameInit();
+                GameFunc.playSound('switchOption');
             }
         },
         [GameEnum.GameStatus.Gaming]: (e)=>{
@@ -42,6 +44,7 @@ window.GameInteraction = {
                 if(!GameVar.snakeNextAngle && GameVar.snakeCurrentAngle !== 2){GameVar.snakeNextAngle=4;}
             }else if(e.code === "KeyP"){//p
                 GameFunc.gameModeFunc.gamePaused();
+                GameFunc.playSound('switchOption');
             }
         },
         [GameEnum.GameStatus.GamePaused]: (e)=>{
@@ -53,12 +56,14 @@ window.GameInteraction = {
                     GameVar.menuFocusIdx=0;
                     GameFunc.drawMenu();
                 }
+                GameFunc.playSound('switchOption');
             }else if(e.code === "KeyO"){//o
                 if(GameVar.menuFocusIdx === 0){
                     GameFunc.gameModeFunc.gameContinue();
                 }else if(GameVar.menuFocusIdx === 1){
                     GameFunc.gameModeFunc.gameEnd();
                 }
+                GameFunc.playSound('switchOption');
             }
         },
     },
