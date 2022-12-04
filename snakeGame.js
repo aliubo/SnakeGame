@@ -19,7 +19,7 @@ window.GameCanvas = {
 window.GameSound = {
     eatFood: new Audio("./res/eatfood.mp3"),
     gameOver: new Audio("./res/gameover.mp3"),
-    switchOption: new Audio("./res/switchOption.mp3"),
+    switchOption: new Audio("./res/switchoption.mp3"),
 }
 
 // 游戏使用的全局变量
